@@ -33,10 +33,6 @@ export const PLAN_SUMMARY = "Das Team bestellt gemeinsam beim Restaurant Hua-Hin
  *  names ONE record, so it reads the singular (J-6, 03.11.2026: „Auswertungen:
  *  Sommerfest“ for one record); the app label is the list's plural. */
 export const NOUNS: Record<string, { one: string; many: string }> = {
-  "organisatoren": {
-    "one": "Organisator",
-    "many": "Organisatoren"
-  },
   "speisekarte": {
     "one": "Speise",
     "many": "Speisen"
@@ -44,6 +40,10 @@ export const NOUNS: Record<string, { one: string; many: string }> = {
   "bestellungen": {
     "one": "Bestellung",
     "many": "Bestellungen"
+  },
+  "organisatoren": {
+    "one": "Organisator",
+    "many": "Organisatoren"
   },
   "bestellpositionen": {
     "one": "Bestellposition",

@@ -316,7 +316,7 @@ export function SpeisekarteDialog({ open, onClose, onSubmit, defaultValues, reco
         <Label htmlFor="nummer">{labelFor('nummer')}</Label>
         <Input
           id="nummer"
-          placeholder="z. B. 12"
+          placeholder=""
           value={fields.nummer ?? ''}
           onChange={e => setFields(f => ({ ...f, nummer: e.target.value }))}
         />
@@ -327,7 +327,7 @@ export function SpeisekarteDialog({ open, onClose, onSubmit, defaultValues, reco
         <Label htmlFor="bezeichnung">{labelFor('bezeichnung')} <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Input
           id="bezeichnung"
-          placeholder="z. B. Pad Thai"
+          placeholder=""
           value={fields.bezeichnung ?? ''}
           onChange={e => setFields(f => ({ ...f, bezeichnung: e.target.value }))}
           required
@@ -421,7 +421,7 @@ export function SpeisekarteDialog({ open, onClose, onSubmit, defaultValues, reco
           inputMode="decimal"
           step="any"
           {...numberInputProps(formEnhancements, 'preis')}
-          placeholder="z. B. 9,50"
+          placeholder=""
           value={fields.preis !== undefined ? fields.preis : (computedValues['preis'] ?? '')}
           onChange={e => setFields(f => ({ ...f, preis: clampNumberValue(formEnhancements, 'preis', e.target.value) }))}
         />
@@ -432,7 +432,7 @@ export function SpeisekarteDialog({ open, onClose, onSubmit, defaultValues, reco
         <Label htmlFor="beschreibung">{labelFor('beschreibung')}</Label>
         <Textarea
           id="beschreibung"
-          placeholder="Zutaten, Schärfe, Hinweise"
+          placeholder=""
           value={fields.beschreibung ?? ''}
           onChange={e => setFields(f => ({ ...f, beschreibung: e.target.value }))}
           rows={3}

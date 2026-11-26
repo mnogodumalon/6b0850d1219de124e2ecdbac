@@ -372,7 +372,7 @@ export function BestellpositionenDialog({ open, onClose, onSubmit, defaultValues
         <Label htmlFor="bestellung">{labelFor('bestellung')} <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Combobox
           id="bestellung"
-          placeholder="Zu welcher Bestellung?"
+          placeholder=""
           items={bestellungenListAll.map(r => ({
             id: r.record_id,
             label: displayNameOf('bestellungen', r.fields as Record<string, unknown>) || r.record_id,
@@ -392,7 +392,7 @@ export function BestellpositionenDialog({ open, onClose, onSubmit, defaultValues
         <Label htmlFor="speise">{labelFor('speise')} <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Combobox
           id="speise"
-          placeholder="Welche Speise?"
+          placeholder=""
           items={speisekarteListAll.map(r => ({
             id: r.record_id,
             label: displayNameOf('speisekarte', r.fields as Record<string, unknown>) || r.record_id,
@@ -416,7 +416,7 @@ export function BestellpositionenDialog({ open, onClose, onSubmit, defaultValues
           inputMode="decimal"
           step="any"
           {...numberInputProps(formEnhancements, 'anzahl')}
-          placeholder="z. B. 2"
+          placeholder=""
           value={fields.anzahl !== undefined ? fields.anzahl : (computedValues['anzahl'] ?? '')}
           onChange={e => setFields(f => ({ ...f, anzahl: clampNumberValue(formEnhancements, 'anzahl', e.target.value) }))}
         />
@@ -430,7 +430,7 @@ export function BestellpositionenDialog({ open, onClose, onSubmit, defaultValues
         <Label htmlFor="sonderwunsch">{labelFor('sonderwunsch')}</Label>
         <Input
           id="sonderwunsch"
-          placeholder="z. B. ohne Koriander, mild"
+          placeholder=""
           value={fields.sonderwunsch ?? ''}
           onChange={e => setFields(f => ({ ...f, sonderwunsch: e.target.value }))}
         />

@@ -356,7 +356,7 @@ export function BestellungenDialog({ open, onClose, onSubmit, defaultValues, rec
         <Label htmlFor="besteller_firstname">{labelFor('besteller_firstname')} <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Input
           id="besteller_firstname"
-          placeholder="z. B. Somchai"
+          placeholder=""
           value={fields.besteller_firstname ?? ''}
           onChange={e => setFields(f => ({ ...f, besteller_firstname: e.target.value }))}
           required
@@ -371,7 +371,7 @@ export function BestellungenDialog({ open, onClose, onSubmit, defaultValues, rec
         <Label htmlFor="besteller_lastname">{labelFor('besteller_lastname')} <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Input
           id="besteller_lastname"
-          placeholder="z. B. Müller"
+          placeholder=""
           value={fields.besteller_lastname ?? ''}
           onChange={e => setFields(f => ({ ...f, besteller_lastname: e.target.value }))}
           required
@@ -386,7 +386,7 @@ export function BestellungenDialog({ open, onClose, onSubmit, defaultValues, rec
         <Label htmlFor="bestelldatum">{labelFor('bestelldatum')}</Label>
         <DatePicker
           id="bestelldatum"
-          placeholder="Wann wurde bestellt?"
+          placeholder=""
           mode="date"
           value={fields.bestelldatum ?? null}
           onChange={v => setFields(f => ({ ...f, bestelldatum: v ?? undefined }))}
@@ -398,7 +398,7 @@ export function BestellungenDialog({ open, onClose, onSubmit, defaultValues, rec
         <Label htmlFor="organisator">{labelFor('organisator')} <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Combobox
           id="organisator"
-          placeholder="Wer kassiert die Zahlung?"
+          placeholder=""
           items={organisatorenListAll.map(r => ({
             id: r.record_id,
             label: displayNameOf('organisatoren', r.fields as Record<string, unknown>) || r.record_id,
@@ -418,7 +418,7 @@ export function BestellungenDialog({ open, onClose, onSubmit, defaultValues, rec
         <Label htmlFor="bemerkung">{labelFor('bemerkung')}</Label>
         <Textarea
           id="bemerkung"
-          placeholder="Wünsche oder Hinweise"
+          placeholder=""
           value={fields.bemerkung ?? ''}
           onChange={e => setFields(f => ({ ...f, bemerkung: e.target.value }))}
           rows={3}

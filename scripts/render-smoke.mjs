@@ -854,6 +854,34 @@ function makeFetch(cfg, log) {
       if (/public-pages\.json(\?|$)/.test(url)) return json(cfg);
       if (/\/locales\/[\w-]+\.json(\?|$)/.test(url)) return new Response('{}', { status: 404 });
       if (/\/version\.json(\?|$)/.test(url)) return json({ version: 'smoke' });
+      // The dashboard's own door routes (`/claude/public-doors/<ag>/<slug>[/<record>]`, publicDoors.ts):
+      // a QR / link of a page with a door per record is the record's OWN link, looked up there.
+      // 26.11.2026: unanswered, every QR view of such a page read „shows no join link“ and the
+      // whole Phase 2 was held back (two builds) — the mock now answers like the backend: every
+      // known parent record has its pair, an unknown record or a page without doors is a 404.
+      const dm = /\/claude\/public-doors\/[^/?]+\/([^/?]+)(?:\/([^/?]+))?(?:\?|$)/.exec(url);
+      if (dm) {
+        const slug = decodeURIComponent(dm[1]);
+        const pcfg = (cfg.pages || {})[slug];
+        const spec = pcfg && pcfg.door_per_record;
+        if (!spec || dm[2] === 'reconcile') return json({ detail: 'Für diese Seite gibt es keine Links je Datensatz.' }, 404);
+        const param = spec.param || 'tor';
+        const name = (pcfg.link_param && pcfg.link_param.name) || spec.link_param || 'id';
+        const loc = globalThis.window && globalThis.window.location;
+        const here = loc ? `${loc.origin}${loc.pathname}` : '/';
+        const stateOf = (id) => ({ read: doorIdsOf(id).read, write: doorIdsOf(id).write, enabled: true, whole: true, param,
+          link: `${here}#/public/${slug}?${encodeURIComponent(name)}=${id}&${param}=${doorIdsOf(id).read}.${doorIdsOf(id).write}` });
+        const parents = Object.keys(recordsFor(spec.entity));
+        if (!dm[2]) {
+          if (method === 'GET') return json({ doors: Object.fromEntries(parents.map(id => [id.toLowerCase(), stateOf(id)])) });
+          return json({ created: 0, kept: parents.length, failed: [] });
+        }
+        const rid = decodeURIComponent(dm[2]);
+        const known = parents.find(id => id.toLowerCase() === rid.toLowerCase());
+        if (!known) return json({ detail: 'Diesen Datensatz gibt es nicht.' }, 404);
+        if (method === 'DELETE') return new Response(null, { status: 204 });
+        return json(stateOf(known));
+      }
       const doorHit = /\/grants\//.test(url) ? doorOf(url) : null;
       const doorSpec = doorHit ? Object.values(cfg.pages || {}).map(p => p.door_per_record).find(Boolean) : null;
       if (doorHit && !doorSpec) return json({ type: 'about:blank', title: 'Not found', status: 404 }, 404);
@@ -2039,8 +2067,23 @@ async function smokePage(page) {
 }
 
 // ── 7b. A view for one record, opened the way the overview opens it ───────────
+// The RECORD a value names. A reference travels as `…/grants/<grant>/apps/<app id>/records/<record id>`
+// (public) or `…/rest/apps/<app id>/records/<record id>` (internal): the app id is 24 hex too and
+// comes FIRST, a record's door is named after its parent (`smoke-write-<parent id>`) — so the record
+// id is the one after `/records/`, else the LAST id in the value, never the first (26.11.2026:
+// reading the first made every „child of the linked record“ unresolvable; a feedback that names the
+// interaction of the opened event was held back twice as „writes for another record“).
 const HEX = /([0-9a-f]{24})/;
-function idOf(v) { const m = HEX.exec(typeof v === 'string' ? v : JSON.stringify(v ?? '')); return m ? m[1] : null; }
+function idOf(v) {
+  const s = typeof v === 'string' ? v : JSON.stringify(v ?? '');
+  const rec = /\/records\/([0-9a-f]{24})(?![0-9a-f])/.exec(s);
+  if (rec) return rec[1];
+  const all = s.match(/[0-9a-f]{24}/g);
+  return all ? all[all.length - 1] : null;
+}
+function idsOf(fields) {
+  return Object.values(fields || {}).flatMap(v => (Array.isArray(v) ? v : [v])).map(idOf).filter(Boolean);
+}
 function entityOfId(id) {
   for (const ent of Object.keys(apps)) if (recordsFor(ent)[id]) return ent;
   return null;
@@ -2163,18 +2206,24 @@ for (const page of pages) {
   const linked = /=([0-9a-f]{24})/.exec(r.opened_with || '');
   if (linked && r.result === 'success' && (r.created || []).length) {
     const lid = linked[1];
-    const carries = (r.created || []).some(c => {
-      const body = JSON.stringify(c.fields || {});
-      if (body.includes(lid)) return true;
-      for (const v of Object.values(c.fields || {})) {
-        const id = idOf(v);
-        const e = id ? entityOfId(id) : null;
-        if (e && JSON.stringify((recordsFor(e)[id] || {}).fields || {}).includes(lid)) return true;
-      }
-      return false;
-    });
+    const linkEntity = entityOfId(lid);
+    // the linked-entity records a referenced record points at (the event of an interaction)
+    const parentsOf = (id) => {
+      const e = entityOfId(id);
+      return e ? idsOf((recordsFor(e)[id] || {}).fields).filter(p => linkEntity && entityOfId(p) === linkEntity) : [];
+    };
+    // compared by RECORD id — the door's name in a reference (`smoke-write-<parent>`) is no naming
+    const carries = (r.created || []).some(c => idsOf(c.fields).some(id => id === lid || parentsOf(id).includes(lid)));
+    // a child of ANOTHER record of the linked entity (the write door of A takes a child of B — the
+    // platform does not refuse it): the record carries the door's parent and still lands elsewhere
+    const foreign = (r.created || []).flatMap(c => idsOf(c.fields)).find(id => id !== lid && entityOfId(id) !== linkEntity
+      && parentsOf(id).length > 0 && !parentsOf(id).includes(lid));
     if (!carries) {
       const msg = `sent for ${r.opened_with} but no created record names that record or one of its children — the page writes for another record`;
+      r.errors.push(msg);
+      errors.push(`${page.file}: render-smoke '${page.slug}': ${msg}`);
+    } else if (foreign) {
+      const msg = `sent for ${r.opened_with} but a created record names ${entityOfId(foreign)} ${foreign}, which belongs to another ${linkEntity} — take only the linked record's own children`;
       r.errors.push(msg);
       errors.push(`${page.file}: render-smoke '${page.slug}': ${msg}`);
     }

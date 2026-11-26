@@ -1855,7 +1855,7 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
           "nummer": "Menu Number",
           "bezeichnung": "Name",
           "kategorie": "Category",
-          "preis": "Price in Euro",
+          "preis": "Price in Euros",
           "beschreibung": "Description"
         },
         "lookups": {
@@ -1876,7 +1876,7 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
           "besteller_lastname": "Last Name",
           "bestelldatum": "Order Date",
           "organisator": "Organizer for Payment",
-          "bemerkung": "Comment",
+          "bemerkung": "Remark",
           "zahlungsstatus": "Payment Status"
         },
         "lookups": {

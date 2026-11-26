@@ -298,7 +298,7 @@ export function OrganisatorenDialog({ open, onClose, onSubmit, defaultValues, re
         <Label htmlFor="organisator_firstname">{labelFor('organisator_firstname')} <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Input
           id="organisator_firstname"
-          placeholder="z. B. Somchai"
+          placeholder=""
           value={fields.organisator_firstname ?? ''}
           onChange={e => setFields(f => ({ ...f, organisator_firstname: e.target.value }))}
           required
@@ -313,7 +313,7 @@ export function OrganisatorenDialog({ open, onClose, onSubmit, defaultValues, re
         <Label htmlFor="organisator_lastname">{labelFor('organisator_lastname')} <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Input
           id="organisator_lastname"
-          placeholder="z. B. Müller"
+          placeholder=""
           value={fields.organisator_lastname ?? ''}
           onChange={e => setFields(f => ({ ...f, organisator_lastname: e.target.value }))}
           required
@@ -330,7 +330,7 @@ export function OrganisatorenDialog({ open, onClose, onSubmit, defaultValues, re
           id="paypal_email"
           type="email"
           inputMode="email"
-          placeholder="z. B. name@beispiel.de"
+          placeholder=""
           value={fields.paypal_email ?? ''}
           onChange={e => setFields(f => ({ ...f, paypal_email: e.target.value }))}
           required
@@ -345,7 +345,7 @@ export function OrganisatorenDialog({ open, onClose, onSubmit, defaultValues, re
         <Label htmlFor="zahlungshinweis">{labelFor('zahlungshinweis')}</Label>
         <Textarea
           id="zahlungshinweis"
-          placeholder="Was sollten Zahlende beachten?"
+          placeholder=""
           value={fields.zahlungshinweis ?? ''}
           onChange={e => setFields(f => ({ ...f, zahlungshinweis: e.target.value }))}
           rows={3}

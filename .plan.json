@@ -1,0 +1,228 @@
+{
+  "version": 1,
+  "language": "de",
+  "understanding": {
+    "summary": "Das Team bestellt gemeinsam beim Restaurant Hua-Hin. Teammitglieder rufen ohne Login ein öffentliches Bestellformular auf, auch per QR-Code, wählen Speisen aus der Speisekarte mit Anzahl und Sonderwunsch und nennen den Organisator, an den sie per PayPal („Geld senden“) zahlen. Organisatoren mit ihrer PayPal-E-Mail-Adresse werden in einem eigenen Bereich gepflegt. Für die Telefon- oder Sammelbestellung gibt es ein druckbares PDF mit allen bestellten Produkten und der Gesamtanzahl je Produkt, die Vorspeisen mit Anzahl je Vorspeise stehen gesondert.",
+    "outside_users": [
+      {
+        "who": "Teammitglieder (Besteller)",
+        "does": "wählen Speisen mit Anzahl und Sonderwunsch, wählen den Organisator für die Zahlung und senden die Bestellung ab"
+      }
+    ],
+    "roles": [
+      "Organisator",
+      "Teammitglied (Besteller)"
+    ],
+    "main_tasks": [
+      "Bestellung über das öffentliche Formular aufgeben",
+      "Organisatoren mit PayPal-Adresse pflegen",
+      "Zahlungseingang vermerken",
+      "Druckbares PDF der Gesamtbestellung für das Restaurant erzeugen",
+      "Speisekarte pflegen"
+    ],
+    "platform_roles": [
+      {
+        "persona": "Organisator",
+        "role": "datenverarbeitung",
+        "apps": [
+          "bestellungen",
+          "bestellpositionen",
+          "speisekarte",
+          "organisatoren"
+        ]
+      },
+      {
+        "persona": "Administrator",
+        "role": "administrator",
+        "apps": [
+          "bestellungen",
+          "bestellpositionen",
+          "speisekarte",
+          "organisatoren"
+        ]
+      }
+    ],
+    "wish_kind": "plain",
+    "wish_signals": []
+  },
+  "flows": [
+    {
+      "slug": "zahlung-vermerken",
+      "label": {
+        "de": "Zahlung vermerken",
+        "en": "Record payment"
+      },
+      "description": "Der Organisator wählt eine offene Bestellung und vermerkt, dass das PayPal-Geld eingegangen ist.",
+      "priority": "must",
+      "writes": [
+        {
+          "entity": "bestellungen",
+          "op": "update",
+          "when": "always",
+          "fields": {
+            "zahlungsstatus": "fixed:bezahlt"
+          },
+          "multiple": false,
+          "needs": {},
+          "defaults": []
+        }
+      ],
+      "required": [],
+      "brief": "# Flow `zahlung-vermerken` — Zahlung vermerken\nDer Organisator wählt eine offene Bestellung und vermerkt, dass das PayPal-Geld eingegangen ist.\n\n## Your hook — import it, never rebuild what it owns\n`import { useZahlungVermerkenFlow } from '@/lib/journey/flows/ZahlungVermerken';` — generated from the Schreibliste below. It OWNS the form(s), one record search per picked field (columns and filter from the plan) and the submit plan with every fixed and derived value. You compose: `flow.forms.<entity>` for <Bound>/<Field>, `{...flow.picks.<field>.select} {...flow.pick('<field>')}` (or `flow.pickMany` for a multi pick) for <EntitySelectStep>, `flow.validateStep(n)` in StepNav.onNext, `flow.submit` + `flow.formList` for SummaryStep/SuccessStep, `flow.reset()`; what the hook does not own reads through its door `flow.port` — availability `useOccupancy(flow.port, '<entity>', { resource })`, a count `useRecordCount(flow.port, …)` — never import servicePort next to the hook. Options: `steps` (field → step), `items` (how a hit reads, per pick), `initial`, `messages`. The hook's docblock in .lane-context.md shows the exact call. This flow CHANGES a record of `bestellungen`: `{...flow.picks.bestellungen.select} {...flow.pick('bestellungen')}` picks it, the hook prefills the form with its current values and updates THAT record — never a create step, never a list from useDashboardData. Never import servicePort, useStepForm, useJourneySubmit, useRecordSearch or useDashboardData in this page — check-intents refuses a page that uses the hook and any of them.\n\n## Steps (in this order)\n1. Offene Bestellung auswählen\n2. Eingang des PayPal-Geldes bestätigen\n3. Zahlungsstatus auf Bezahlt setzen\n\n## Schreibliste — the ONLY writes this flow makes (the gate compares your plan steps with this list)\n- updates `bestellungen`:\n    - `zahlungsstatus`: fixed value `bezahlt` — set it in the plan step's values, never ask\n\n## Reads\n- `bestellungen` columns besteller_firstname, besteller_lastname, bestelldatum, organisator, zahlungsstatus\n\n## Success page\n- the success page offers the way back — `undo={flow.undo}` on <SuccessStep>: „Zahlung zurücknehmen“ sets zahlungsstatus=offen\n- shows: `bestellungen.zahlungsstatus`\n\n## Never write these — another flow or a tool owns them\n- `bestellungen.bestelldatum` (owner: tool `bestelldatum-setzen`)\n"
+    }
+  ],
+  "public_pages": [
+    {
+      "slug": "essen-bestellen",
+      "purpose": "Teammitglieder bestellen ohne Login beim Restaurant Hua-Hin, auch per QR-Code erreichbar. Sie sehen die Speisekarte, tragen ihren Namen und eine Bemerkung ein, wählen je Speise Anzahl und Sonderwunsch und den Organisator für die Zahlung. Zu jedem Organisator sehen sie die PayPal-E-Mail-Adresse und den Zahlungshinweis. Das Bestelldatum setzt eine Automatik beim Anlegen der Bestellung.",
+      "publish": true,
+      "lists": [
+        {
+          "entity": "speisekarte",
+          "columns": [
+            "nummer",
+            "bezeichnung",
+            "kategorie",
+            "preis",
+            "beschreibung"
+          ],
+          "filter": null,
+          "max_records": null
+        },
+        {
+          "entity": "organisatoren",
+          "columns": [
+            "organisator_firstname",
+            "organisator_lastname",
+            "paypal_email",
+            "zahlungshinweis"
+          ],
+          "filter": null,
+          "max_records": null
+        }
+      ],
+      "creates": [
+        {
+          "entity": "bestellungen",
+          "fields": {
+            "besteller_firstname": "user",
+            "besteller_lastname": "user",
+            "organisator": "picked",
+            "bemerkung": "user"
+          },
+          "fixed": {
+            "zahlungsstatus": "offen"
+          }
+        },
+        {
+          "entity": "bestellpositionen",
+          "fields": {
+            "bestellung": "picked",
+            "speise": "picked",
+            "anzahl": "user",
+            "sonderwunsch": "user"
+          },
+          "fixed": {}
+        }
+      ],
+      "visitor_fields": [],
+      "page_sets": [],
+      "record_key": {},
+      "editable": {},
+      "edit_own": false,
+      "link_param": null,
+      "door_per_record": null,
+      "vote": null,
+      "brief": "# Public page `essen-bestellen`\nTeammitglieder bestellen ohne Login beim Restaurant Hua-Hin, auch per QR-Code erreichbar. Sie sehen die Speisekarte, tragen ihren Namen und eine Bemerkung ein, wählen je Speise Anzahl und Sonderwunsch und den Organisator für die Zahlung. Zu jedem Organisator sehen sie die PayPal-E-Mail-Adresse und den Zahlungshinweis. Das Bestelldatum setzt eine Automatik beim Anlegen der Bestellung.\n\n## Lists (declare exactly these in the surface)\n- `speisekarte`: columns `nummer`, `bezeichnung`, `kategorie`, `preis`, `beschreibung`\n- `organisatoren`: columns `organisator_firstname`, `organisator_lastname`, `paypal_email`, `zahlungshinweis`\n\n## Creates (declare exactly these in the surface)\n- `bestellungen`: visitor fields `besteller_firstname`, `besteller_lastname`, `organisator`, `bemerkung`; preset_fields {\"zahlungsstatus\": \"offen\"}\n- `bestellpositionen`: visitor fields `bestellung`, `speise`, `anzahl`, `sonderwunsch`\n\n## Availability — mechanical, write nothing for it\nA picker (`useRecordSearch`) never offers a record another record already takes (a booked slot) — the layer leaves it out. To SHOW booked periods, call `useOccupancy(port, '<entity>')` and hand `blocked` to AvailabilityRangePicker; the integration gives the page exactly that read (dates or the reference, never who booked). Never declare a list of bookings with names or contacts to work availability out yourself.\n\nPublish: never from here — every page starts as a draft; the owner publishes it under Verwaltung → Öffentliche Seiten after the build (the plan wishes it published)\n"
+    }
+  ],
+  "tools": [
+    {
+      "id": "bestelldatum-setzen",
+      "purpose": "Schreibt beim Anlegen einer Bestellung das Datum des Eingangs aus der Serveruhr in das Bestelldatum. Die öffentliche Seite sendet dieses Feld nicht."
+    },
+    {
+      "id": "sammelbestellung-als-pdf-ablegen",
+      "purpose": "Ein manuelles Werkzeug, das alle Bestellpositionen nach Speise summiert, die Vorspeisen als eigenen Block mit Anzahl je Vorspeise aufführt und das Ergebnis als PDF unter Dateien ablegt."
+    }
+  ],
+  "covered_by_platform": [
+    {
+      "wish": "Bereich Organisatoren",
+      "feature": "list_page"
+    },
+    {
+      "wish": "Bestellungen und Speisekarte pflegen",
+      "feature": "record_form"
+    }
+  ],
+  "ownership": {
+    "bestellungen": {
+      "zahlungsstatus": "intent:zahlung-vermerken",
+      "bestelldatum": "tool:bestelldatum-setzen"
+    }
+  },
+  "dashboard": {
+    "focus": [
+      "Offene Bestellungen mit Zahlungsstatus",
+      "Gesamtmenge je Speise über alle Bestellungen",
+      "Vorspeisen mit Anzahl je Vorspeise",
+      "Bestellungen je Organisator"
+    ],
+    "hints": [
+      "Zahlungsstatus nach Eingang des PayPal-Geldes auf Bezahlt setzen",
+      "QR-Code zum öffentlichen Bestellformular im Überblick bereithalten"
+    ],
+    "views": [
+      {
+        "route": "sammelbestellung-druck",
+        "label": {
+          "de": "Sammelbestellung drucken",
+          "en": "Print group order"
+        },
+        "purpose": "Druckblatt für das Restaurant: alle bestellten Speisen mit Gesamtanzahl je Speise, die Vorspeisen gesondert mit Anzahl je Vorspeise, damit die Bestellung einfach durchgegeben werden kann.",
+        "bare": true,
+        "live_seconds": 0,
+        "reads": [
+          {
+            "entity": "bestellpositionen",
+            "columns": [
+              "bestellung",
+              "speise",
+              "anzahl",
+              "sonderwunsch"
+            ],
+            "filter": {
+              "mode": "all",
+              "conditions": []
+            }
+          },
+          {
+            "entity": "speisekarte",
+            "columns": [
+              "nummer",
+              "bezeichnung",
+              "kategorie",
+              "preis"
+            ],
+            "filter": {
+              "mode": "all",
+              "conditions": []
+            }
+          }
+        ],
+        "contract": [
+          "Zeigt jede bestellte Speise einmal mit Nummer auf der Speisekarte, Bezeichnung und der Summe der Anzahl über alle Bestellpositionen, sortiert nach Kategorie und Nummer.",
+          "Zeigt die Vorspeisen als eigenen Block oben mit der Anzahl je Vorspeise; ohne bestellte Vorspeise steht dort „Keine Vorspeisen“.",
+          "Führt Sonderwünsche je Speise unter der Zeile auf, damit sie mit durchgegeben werden können.",
+          "Ist die Seite auf Papier ausgelegt ohne Menü und Kopfzeile, mit Druckknopf bzw. PDF-Speicherung des Browsers; ohne Bestellpositionen steht dort „Noch keine Bestellung“."
+        ],
+        "shows_marked": "",
+        "edits": [],
+        "compose": []
+      }
+    ],
+    "writes": [],
+    "wishes": []
+  }
+}
